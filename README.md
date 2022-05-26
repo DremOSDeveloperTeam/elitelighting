@@ -37,3 +37,10 @@ blue: int =           0
 ```
 
 If you want the hazard light to not be red, you can also change it with the same method.
+
+### Troubleshooting
+#### When I run tinytuya's wizard, the version on my lights say 3.1.
+Some lights run a different version of Tuya than the next. By default, the script assumes the bulbs run 3.3, as all new Tuya devices run 3.3. If you have an older bulb, it may run 3.1. Search for `Set Tuya versions` and change 3.3 on the devices below this line to 3.1.
+If you're mixing old and new bulbs, only change the versions for the bulbs that have the older versions, obviously.
+
+Does that make sense? I'm really tired.
