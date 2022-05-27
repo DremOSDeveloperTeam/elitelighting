@@ -1,4 +1,4 @@
-# A (mostly) standalone script to control lights according to events in Elite: Dangerous.
+# A standalone script to control lights according to events in Elite: Dangerous.
 # Coded in two afternoons with lots of coffee by Katie.
 # This is meant to be a personal project, so I didn't really bother with expandability and such.
 # Perhaps I'll revisit this in the future and make it so it can be expended upon easier. Don't count on it.
@@ -17,14 +17,14 @@ import random
 import json
 import os
 
-Version = "0.1"
+Version = "0.1.1"
 
 # Use the classes below to configure your lights.
 # You MUST go through the following setup process: https://github.com/jasonacox/tinytuya#setup-wizard---getting-local-keys
 class PortLight:
     # Actual light config.
     DeviceID: str =     "DEVICEID HERE"
-    IP: str =           "LOCAL.IP.ADDRESS.HERE"
+    IP: str =           "BULB.IP.ADDRESS.HERE"
     LocalID: str =      "LOCALID HERE"
     # Color config. I've left it as my own preferences, but commented out the defaults as well.
     red: int =          230
@@ -33,7 +33,7 @@ class PortLight:
 
 class StarboardLight:
     DeviceID: str =     "DEVICEID HERE"
-    IP: str =           "LOCAL.IP.ADDRESS.HERE"
+    IP: str =           "BULB.IP.ADDRESS.HERE"
     LocalID: str =      "LOCALID HERE"
     red: int =          230
     green: int =        100
@@ -41,7 +41,7 @@ class StarboardLight:
 
 class HazardLight:
     DeviceID: str =     "DEVICEID HERE"
-    IP: str =           "LOCAL.IP.ADDRESS.HERE"
+    IP: str =           "BULB.IP.ADDRESS.HERE"
     LocalID: str =      "LOCALID HERE"
     red: int =          255
     green: int =        0
@@ -230,12 +230,15 @@ def ReloadFlags():    # Reloads Elite: Dangerous status flags and sets flicker, 
     try:
         StatusJSON = json.loads(f.read()) # Read the json from the Status.json file. 
     except:
+        #print("JSONDecodeError in ReloadFlags(). Continuing.")
         pass # Sometimes it guffs up reading (JSONDecodeError), and I can't really fix this.
     else:                                               # This makes the logic below use the previous status flags if an exception is raised
         StatusFlags = "0x%8x" % StatusJSON["Flags"]     # Extrapolate the flags from the json file and make it a known length (8 hex digits)
     f.close() # Close Status.json
 
     try:
+        StatusFlagsStr = str(StatusFlags)
+        
         # Convert the ship state (3rd from right) byte (LightsOn, Cargo Scoop Deployed, Silent Running, Scooping Fuel)
         ShipStateByte = bin(int(StatusFlagsStr[-3]))[2:].zfill(4)
         ShipStateByteStr = str(ShipStateByte)
@@ -272,6 +275,8 @@ def ReloadFlags():    # Reloads Elite: Dangerous status flags and sets flicker, 
     except ValueError:
         print("ValueError! More than likely, Elite: Dangerous is closed. Exiting.")
         ContinueFlag = False
+    #except IndexError:
+    #    print("IndexError encountered in ReloadFlags. This may be recoverable. Continuing.")
 
 def GetCurrentLog(): # Gets the most recent log file left by Elite: Dangerous.
     global StatusDir
@@ -283,10 +288,11 @@ def GetCurrentLog(): # Gets the most recent log file left by Elite: Dangerous.
     os.chdir(StatusDir)
     StatusDirContents = sorted(os.listdir(StatusDir), key=os.path.getmtime) # Get and sort the "saved game" directory from newest first.
     os.chdir(OriginalDir)
-    
-    for f in (StatusDirContents):
+
+    for f in reversed(StatusDirContents):
         if(f[-4:] == ".log"): # Search for the newest .log file.
             LogName = f   # We found the file!
+            break
     
     print("Discovered current log file: " + f)
     
